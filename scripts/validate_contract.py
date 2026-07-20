@@ -20,11 +20,13 @@ SKILL_FILES = (
 FORBIDDEN_TEXT = (
     "starcat pair --stdin",
     "starcat capabilities --json",
+    "starcat stats --json",
 )
 REQUIRED_HELP_TEXT = (
     "pair [one-time-pairing-URI]",
     "doctor [--json]",
     "capabilities                  Print Starcat capabilities as JSON",
+    "stats                         Show Starcat repository, AI usage, and RAG statistics",
     "repo note set <owner/name> --stdin [--apply]",
 )
 
@@ -89,7 +91,7 @@ def validate_cli_contract(cli: Path) -> None:
             if required not in help_result.stdout:
                 raise ValueError(f"starcat --help is missing expected contract: {required}")
 
-        for obsolete_arguments in (["pair", "--stdin"], ["capabilities", "--json"]):
+        for obsolete_arguments in (["pair", "--stdin"], ["capabilities", "--json"], ["stats", "--json"]):
             result = run_cli(cli, obsolete_arguments, home)
             if result.returncode == 0:
                 rendered = " ".join(obsolete_arguments)
