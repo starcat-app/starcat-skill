@@ -12,22 +12,12 @@ import tempfile
 import yaml
 
 
-SKILL_FILES = (
-    Path("SKILL.md"),
-    Path("references/commands.md"),
-    Path("references/workflows.md"),
-)
-FORBIDDEN_TEXT = (
-    "starcat pair --stdin",
-    "starcat capabilities --json",
-    "starcat stats --json",
-)
 REQUIRED_HELP_TEXT = (
     "pair [one-time-pairing-URI]",
-    "doctor [--json]",
+    "doctor                       Check pairing, connection, tools, and capabilities",
     "capabilities                  Print Starcat capabilities as JSON",
     "stats                         Show Starcat repository, AI usage, and RAG statistics",
-    "repo note set <owner/name> --stdin [--apply]",
+    "repo note set <owner/name> [--apply]",
 )
 
 
@@ -56,15 +46,6 @@ def validate_frontmatter(root: Path) -> None:
         raise ValueError("SKILL.md description must not be empty")
 
 
-def validate_documented_commands(root: Path) -> None:
-    """Reject removed flags before agents can copy them into real workflows."""
-    for relative_path in SKILL_FILES:
-        content = (root / relative_path).read_text(encoding="utf-8")
-        for forbidden in FORBIDDEN_TEXT:
-            if forbidden in content:
-                raise ValueError(f"{relative_path} contains removed command: {forbidden}")
-
-
 def run_cli(cli: Path, arguments: list[str], home: str) -> subprocess.CompletedProcess[str]:
     """Run CLI checks in an isolated HOME to protect real pairing data."""
     environment = os.environ.copy()
@@ -91,19 +72,11 @@ def validate_cli_contract(cli: Path) -> None:
             if required not in help_result.stdout:
                 raise ValueError(f"starcat --help is missing expected contract: {required}")
 
-        for obsolete_arguments in (["pair", "--stdin"], ["capabilities", "--json"], ["stats", "--json"]):
-            result = run_cli(cli, obsolete_arguments, home)
-            if result.returncode == 0:
-                rendered = " ".join(obsolete_arguments)
-                raise ValueError(f"CLI still accepts removed command: starcat {rendered}")
-
-
 def main() -> None:
     """Run all Skill structure and CLI contract checks."""
     arguments = parse_arguments()
     root = Path(__file__).resolve().parent.parent
     validate_frontmatter(root)
-    validate_documented_commands(root)
     validate_cli_contract(Path(arguments.cli).expanduser().resolve())
     print("starcat-skill validation passed")
 

@@ -7,7 +7,6 @@
 | `starcat pair "<starcat-pair://...>"` | Execute the complete single-use pairing command copied from Starcat and wait for in-app approval |
 | `starcat unpair` | Delete the current device profile and its operating-system credential |
 | `starcat doctor` | Check pairing, connectivity, protocol compatibility, tools, and capabilities using terminal-friendly text |
-| `starcat doctor --json` | Print the same diagnostic result as machine-readable JSON |
 | `starcat mcp` | Bridge stdio JSON-RPC to Starcat MCP Streamable HTTP |
 
 For pairing, instruct the user to copy the complete command from Starcat and execute it exactly as provided. Never request a standalone `starcat-pair://...` URI or Local API Key. Never print, persist, or reuse the pairing command.
@@ -67,4 +66,4 @@ starcat stats ai --range 30d
 starcat stats knowledge
 ```
 
-They intentionally do not accept `--json`. Agents use the structured MCP tools instead.
+Agents use the structured MCP tools instead of parsing terminal output.

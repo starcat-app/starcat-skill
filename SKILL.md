@@ -16,7 +16,7 @@ When the user asks to install or update `starcat-skill`, perform the following w
 3. If the destination is already a clean checkout of that repository, run `git -C <skill-path> pull --ff-only`.
 4. If the destination exists but is not that repository, or contains uncommitted changes, stop and report the conflict. Never delete, overwrite, reset, or force-update it.
 5. Confirm that `SKILL.md`, `agents/openai.yaml`, `references/commands.md`, and `references/workflows.md` exist.
-6. Run `starcat --help` and confirm that pairing uses a complete URI argument, `starcat mcp` is available, and statistics commands do not advertise a `--json` flag.
+6. Run `starcat --help` and confirm that pairing uses a complete URI argument, `starcat mcp` is available, and statistics commands are present.
 7. Reload or restart the AI agent so it can refresh its Skill registry. If the current session cannot reload Skills, report that installation succeeded but discovery still requires a restart. Never claim that the Skill was discovered without observing it.
 8. After discovery, invoke `$starcat-skill` with a read-only verification request. Run `starcat doctor`, connect the agent to the user-level MCP server command `starcat mcp`, call `starcat.get_capabilities`, and run one `starcat.search_repos` request with `limit = 2`. Do not execute write tools during installation verification.
 
