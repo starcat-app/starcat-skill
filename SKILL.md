@@ -15,7 +15,7 @@ Before the first operation, run:
 starcat doctor --json
 ```
 
-If the command is unavailable, install the appropriate official release from `https://github.com/dong4j/starcat-cli`. If the CLI is not paired, ask the user to copy one-time pairing instructions from **Starcat > Settings > MCP Service**, run `starcat pair --stdin`, and provide the URI only through stdin. Never request a Local API Key, print the pairing URI, persist it, or place it in command arguments.
+If the command is unavailable, install the appropriate official release from `https://github.com/starcat-app/starcat-cli`. If the CLI is not paired, ask the user to copy one-time pairing instructions from **Starcat > Settings > MCP Service**, run `starcat pair --stdin`, and provide the URI only through stdin. Never request a Local API Key, print the pairing URI, persist it, or place it in command arguments.
 
 ## Follow the operating rules
 
