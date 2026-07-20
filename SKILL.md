@@ -1,81 +1,81 @@
 ---
 name: starcat-skill
-description: 通过跨平台 Starcat CLI 读取和整理 Starcat 中的 GitHub 仓库知识库。适用于查询项目、标签、私有笔记、阅读状态、README 与 AI 摘要，以及在用户授权时新增笔记、状态和标签；当用户提到 Starcat、整理收藏仓库、为项目添加笔记或标签、读取 Starcat 数据、生成仓库摘要时使用。
+description: Read and organize GitHub repository knowledge stored in Starcat through the cross-platform Starcat CLI. Use when an agent needs to search repositories; inspect tags, private notes, reading status, READMEs, or AI summaries; or, with user authorization, add or update notes, statuses, and tags. Trigger for requests involving Starcat data, organizing starred repositories, annotating a project, or generating a repository summary.
 ---
 
 # Starcat Skill
 
-## 唯一交互入口
+## Use the CLI as the only integration surface
 
-只使用 `starcat` CLI 操作 Starcat。不要直接读取 SQLite、CloudKit、加密凭据文件或 Local API Key，也不要自行实现 HTTP/MCP 请求。
+Use only the `starcat` CLI to operate Starcat. Do not read SQLite, CloudKit, encrypted credential files, or Local API Keys directly. Do not implement custom HTTP or MCP requests.
 
-首次使用先运行：
+Before the first operation, run:
 
 ```bash
 starcat doctor --json
 ```
 
-如果命令不存在，从 `https://github.com/dong4j/starcat-cli` 安装适合当前平台的已签名 Release；如果提示尚未配对，请用户在 Starcat「设置 → MCP 服务」中复制一次性配对命令。不要要求用户提供 Local API Key，不要输出或持久化 pairing URI。
+If the command is unavailable, install the appropriate official release from `https://github.com/dong4j/starcat-cli`. If the CLI is not paired, ask the user to copy one-time pairing instructions from **Starcat > Settings > MCP Service**, run `starcat pair --stdin`, and provide the URI only through stdin. Never request a Local API Key, print the pairing URI, persist it, or place it in command arguments.
 
-## 工作规则
+## Follow the operating rules
 
-1. 每个工作流先运行 `starcat capabilities --json`，根据返回值判断私有笔记、写入、破坏性写入和摘要生成能力。
-2. 已知 `owner/name` 时优先运行 `starcat repo context owner/name`，一次读取 repo、tags、note 和 summary。
-3. 所有命令 stdout 都是 JSON；解析 JSON 再回答，不要根据人类文案猜测状态。
-4. 写入命令默认 dry-run。先运行不带 `--apply` 的命令核对目标和变化，再决定是否正式执行。
-5. 用户原请求已明确写入意图且 dry-run 与请求完全一致时，可以追加 `--apply`；否则先说明变化并征求确认。
-6. 正式写入后重新运行 `starcat repo context owner/name` 验证结果。
-7. `replace` 会替换仓库全部标签。除非用户明确要求并确认完整集合，否则使用 `add` 或 `remove`。
-8. 不执行 GitHub 远端 star/unstar；当前写入只修改 Starcat 用户数据。
+1. Run `starcat capabilities --json` before each workflow. Use its result to determine whether private notes, writes, destructive writes, and summary generation are available.
+2. When `owner/name` is known, prefer `starcat repo context owner/name` to retrieve repository data, tags, the private note, and the summary in one call.
+3. Treat stdout from every command as JSON. Parse the JSON before answering; do not infer state from human-readable messages.
+4. Treat every write command as dry-run by default. Run it without `--apply` first and inspect the target and proposed changes.
+5. Add `--apply` only when the user's original request clearly authorizes the write and the dry-run exactly matches that request. Otherwise, explain the proposed changes and ask for confirmation.
+6. After an applied write, run `starcat repo context owner/name` again to verify the result.
+7. Remember that `replace` overwrites all tags on the repository. Use `add` or `remove` unless the user explicitly provides and confirms the complete final tag set.
+8. Do not star or unstar repositories on GitHub. Current write commands modify only Starcat user data.
 
-## 常用工作流
+## Use the common workflows
 
-### 搜索与读取
+### Search and read
 
 ```bash
 starcat repo search "local first knowledge base" --scope all --limit 10
-starcat repo search "适合 Swift 初学者的并发库" --semantic
+starcat repo search "concurrency libraries for Swift beginners" --semantic
 starcat repo context apple/swift
 starcat repo readme apple/swift
 starcat tags list
 ```
 
-README 可能很大，只在任务确实需要项目正文时读取。
+README content can be large. Retrieve it only when the task requires repository documentation.
 
-### 笔记、状态和标签
+### Manage notes, status, and tags
 
-笔记内容必须通过 stdin 传入，避免 Markdown、换行或敏感文本进入进程参数：
+Pass note content through stdin so Markdown, line breaks, and sensitive text do not enter process arguments:
 
 ```bash
-printf '%s' '## 使用场景
+printf '%s' '## Use case
 
-用于学习 Swift Concurrency。' | starcat repo note set apple/swift --stdin
+Use this repository to learn Swift Concurrency.' | starcat repo note set apple/swift --stdin
 ```
 
-确认 dry-run 后正式写入：
+After reviewing the dry-run, apply the write:
 
 ```bash
-printf '%s' '## 使用场景
+printf '%s' '## Use case
 
-用于学习 Swift Concurrency。' | starcat repo note set apple/swift --stdin --apply
+Use this repository to learn Swift Concurrency.' | starcat repo note set apple/swift --stdin --apply
 starcat repo status set apple/swift using --apply
-starcat repo tags add apple/swift Swift 官方 --apply
+starcat repo tags add apple/swift Swift Official --apply
 ```
 
-### 摘要
+### Work with summaries
 
-读取缓存摘要：
+Read the cached summary:
 
 ```bash
 starcat repo summary apple/swift
 ```
 
-只有用户明确要求生成新摘要时才运行：
+Generate a new summary only when the user explicitly requests it:
 
 ```bash
 starcat repo summary apple/swift --generate
 ```
 
-摘要生成可能消耗用户配置的 AI Provider 配额。只有用户明确允许 External Search 时才追加 `--allow-external-context`。外部 Agent 自己编写的文字不能冒充 Starcat 原生 AI 摘要；需要保存时应作为 Markdown 私有笔记并注明来源。
+Summary generation may consume quota from the user's configured AI provider. Add `--allow-external-context` only when the user explicitly permits External Search. Never represent text written by the external agent as a native Starcat AI summary. If the user wants to save agent-written content, store it as a Markdown private note and identify its source.
 
-命令与边界详见 [references/commands.md](references/commands.md) 和 [references/workflows.md](references/workflows.md)。
+See [references/commands.md](references/commands.md) for the command contract and [references/workflows.md](references/workflows.md) for reusable workflows and recovery steps.

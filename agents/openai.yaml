@@ -1,4 +1,4 @@
 interface:
   display_name: "Starcat"
-  short_description: "通过跨平台 Starcat CLI 安全读取与整理仓库知识库"
-  default_prompt: "使用 $starcat-skill 通过 starcat CLI 整理一个 Starcat 仓库。"
+  short_description: "Safely organize Starcat repository knowledge"
+  default_prompt: "Use $starcat-skill to inspect and organize a repository in Starcat through the starcat CLI."

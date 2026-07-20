@@ -1,35 +1,37 @@
-# Starcat CLI 命令契约
+# Starcat CLI Command Contract
 
-## 连接与 MCP
+## Pairing and MCP
 
-| 命令 | 用途 |
+| Command | Purpose |
 |---|---|
-| `starcat pair <starcat-pair://...>` | 兑换一次性邀请并等待 Starcat 确认设备 |
-| `starcat unpair` | 删除当前设备 profile 和系统安全存储凭据 |
-| `starcat doctor --json` | 检查配对、连接、协议版本、工具列表和能力 |
-| `starcat capabilities --json` | 读取 Starcat 当前权限快照 |
-| `starcat mcp` | 将 stdio JSON-RPC 桥接到 Starcat MCP Streamable HTTP |
+| `starcat pair --stdin` | Redeem a one-time invitation provided through stdin and wait for approval in Starcat |
+| `starcat unpair` | Delete the current device profile and its operating-system credential |
+| `starcat doctor --json` | Check pairing, connectivity, protocol compatibility, available tools, and capabilities |
+| `starcat capabilities --json` | Read the current Starcat permission snapshot |
+| `starcat mcp` | Bridge stdio JSON-RPC to Starcat MCP Streamable HTTP |
 
-## 读取
+Never place a `starcat-pair://...` URI in command arguments. Run `starcat pair --stdin` and provide the URI only through stdin.
 
-| 命令 | 用途 |
+## Read operations
+
+| Command | Purpose |
 |---|---|
-| `starcat repo search <query>` | 关键词搜索；支持 `--scope`、`--limit`、`--semantic` |
-| `starcat repo context <owner/name>` | 聚合读取 repo、tags、note、summary |
-| `starcat repo readme <owner/name>` | 读取缓存 README |
-| `starcat repo summary <owner/name>` | 读取缓存摘要 |
-| `starcat tags list` | 列出全部标签 |
+| `starcat repo search <query>` | Run keyword search with optional `--scope`, `--limit`, or `--semantic` flags |
+| `starcat repo context <owner/name>` | Retrieve repository data, tags, the private note, and the summary together |
+| `starcat repo readme <owner/name>` | Read the cached README |
+| `starcat repo summary <owner/name>` | Read the cached summary |
+| `starcat tags list` | List all tags |
 
-## 生成与写入
+## Generation and write operations
 
-| 命令 | 用途与约束 |
+| Command | Purpose and constraints |
 |---|---|
-| `starcat repo summary <owner/name> --generate` | 使用 Starcat AI Provider 生成摘要；可能消耗配额 |
-| `starcat repo note set <owner/name> --stdin` | 写入或清空 Markdown 笔记；内容只从 stdin 读取 |
-| `starcat repo status set <owner/name> <status>` | `status` 为 `unread`、`read` 或 `using` |
-| `starcat repo tags add <owner/name> <tag...>` | 增量添加标签，缺失标签自动创建 |
-| `starcat repo tags remove <owner/name> <tag...>` | 增量移除标签 |
-| `starcat repo tags replace <owner/name> <tag...>` | 替换全部标签，需要破坏性写入权限 |
-| `starcat tag create <name>` | 创建标签；可传 `--color`、`--icon` |
+| `starcat repo summary <owner/name> --generate` | Generate a summary with the user's Starcat AI provider; this may consume quota |
+| `starcat repo note set <owner/name> --stdin` | Set or clear a Markdown private note; read content only from stdin |
+| `starcat repo status set <owner/name> <status>` | Set `status` to `unread`, `read`, or `using` |
+| `starcat repo tags add <owner/name> <tag...>` | Add tags incrementally and create missing tags when permitted |
+| `starcat repo tags remove <owner/name> <tag...>` | Remove tags incrementally |
+| `starcat repo tags replace <owner/name> <tag...>` | Replace all tags; require destructive-write permission |
+| `starcat tag create <name>` | Create a tag with optional `--color` and `--icon` values |
 
-所有写入命令不带 `--apply` 时都是 dry-run。正式写入后必须重新读取 context 验证。
+Every write command is a dry-run without `--apply`. After applying a write, retrieve the repository context again to verify the stored result.
