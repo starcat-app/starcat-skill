@@ -1,4 +1,4 @@
 interface:
   display_name: "Starcat"
-  short_description: "Safely organize Starcat repository knowledge"
-  default_prompt: "Use $starcat-skill to inspect and organize a repository in Starcat through the starcat CLI."
+  short_description: "Safely inspect and organize Starcat repository knowledge"
+  default_prompt: "Use $starcat-skill to inspect and organize repositories in Starcat through the starcat CLI."

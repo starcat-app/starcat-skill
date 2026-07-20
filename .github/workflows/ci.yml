@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install validation dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Install latest released Starcat CLI
+        run: |
+          curl -fsSL https://github.com/starcat-app/starcat-cli/releases/latest/download/install.sh -o "$RUNNER_TEMP/install-starcat.sh"
+          STARCAT_INSTALL_DIR="$RUNNER_TEMP/bin" sh "$RUNNER_TEMP/install-starcat.sh"
+      - name: Validate Skill and CLI contract
+        run: python scripts/validate_contract.py --cli "$RUNNER_TEMP/bin/starcat"

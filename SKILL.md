@@ -1,9 +1,26 @@
 ---
 name: starcat-skill
-description: Read and organize GitHub repository knowledge stored in Starcat through the cross-platform Starcat CLI. Use when an agent needs to search repositories; inspect tags, private notes, reading status, READMEs, or AI summaries; or, with user authorization, add or update notes, statuses, and tags. Trigger for requests involving Starcat data, organizing starred repositories, annotating a project, or generating a repository summary.
+description: Install, update, and use starcat-skill to read and organize GitHub repository knowledge stored in Starcat through the cross-platform Starcat CLI. Use when an agent needs to install this Skill; search repositories; inspect tags, private notes, reading status, READMEs, or AI summaries; or, with explicit user authorization, add or update notes, statuses, and tags. Trigger for requests involving Starcat data, organizing starred repositories, annotating a project, or generating a repository summary.
 ---
 
 # Starcat Skill
+
+## Install or update this Skill
+
+When the user asks to install or update `starcat-skill`, perform the following workflow before using Starcat:
+
+1. Identify the current AI agent and choose exactly one user-level destination:
+   - Codex: `$HOME/.codex/skills/starcat-skill`
+   - Claude Code: `$HOME/.claude/skills/starcat-skill`
+2. If the destination does not exist, create its parent directory and clone `https://github.com/starcat-app/starcat-skill` into the destination.
+3. If the destination is already a clean checkout of that repository, run `git -C <skill-path> pull --ff-only`.
+4. If the destination exists but is not that repository, or contains uncommitted changes, stop and report the conflict. Never delete, overwrite, reset, or force-update it.
+5. Confirm that `SKILL.md`, `agents/openai.yaml`, `references/commands.md`, and `references/workflows.md` exist.
+6. Run `starcat --help` and confirm that pairing uses a complete URI argument and `capabilities` is called without a `--json` flag.
+7. Reload or restart the AI agent so it can refresh its Skill registry. If the current session cannot reload Skills, report that installation succeeded but discovery still requires a restart. Never claim that the Skill was discovered without observing it.
+8. After discovery, invoke `$starcat-skill` with a read-only verification request. Run `starcat doctor --json`, `starcat capabilities`, and one repository search with `--limit 2`. Do not execute write commands during installation verification.
+
+Install only into the current agent's user-level Skill directory. Do not install into a project repository, request a Local API Key, modify unrelated files, or run destructive Git commands.
 
 ## Use the CLI as the only integration surface
 
@@ -15,13 +32,13 @@ Before the first operation, run:
 starcat doctor --json
 ```
 
-If the command is unavailable, install the appropriate official release from `https://github.com/starcat-app/starcat-cli`. If the CLI is not paired, ask the user to copy one-time pairing instructions from **Starcat > Settings > MCP Service**, run `starcat pair --stdin`, and provide the URI only through stdin. Never request a Local API Key, print the pairing URI, persist it, or place it in command arguments.
+If the command is unavailable, install the appropriate official release from `https://github.com/starcat-app/starcat-cli`. If the CLI is not paired, instruct the user to open **Starcat > Settings > MCP Service** and copy the complete single-use pairing command. Execute the provided `starcat pair ...` command exactly as supplied. Never request a standalone pairing URI or Local API Key, and never print, persist, or reuse the pairing command.
 
 ## Follow the operating rules
 
-1. Run `starcat capabilities --json` before each workflow. Use its result to determine whether private notes, writes, destructive writes, and summary generation are available.
+1. Run `starcat capabilities` before each workflow. Use its JSON result to determine whether private notes, ordinary writes, destructive writes, and summary generation are available.
 2. When `owner/name` is known, prefer `starcat repo context owner/name` to retrieve repository data, tags, the private note, and the summary in one call.
-3. Treat stdout from every command as JSON. Parse the JSON before answering; do not infer state from human-readable messages.
+3. `capabilities`, repository, tag, and write commands return JSON. Parse that JSON before answering. `doctor` defaults to terminal-friendly text; use `starcat doctor --json` only when machine-readable diagnostics are needed.
 4. Treat every write command as dry-run by default. Run it without `--apply` first and inspect the target and proposed changes.
 5. Add `--apply` only when the user's original request clearly authorizes the write and the dry-run exactly matches that request. Otherwise, explain the proposed changes and ask for confirmation.
 6. After an applied write, run `starcat repo context owner/name` again to verify the result.
@@ -78,4 +95,4 @@ starcat repo summary apple/swift --generate
 
 Summary generation may consume quota from the user's configured AI provider. Add `--allow-external-context` only when the user explicitly permits External Search. Never represent text written by the external agent as a native Starcat AI summary. If the user wants to save agent-written content, store it as a Markdown private note and identify its source.
 
-See [references/commands.md](references/commands.md) for the command contract and [references/workflows.md](references/workflows.md) for reusable workflows and recovery steps.
+Read [references/commands.md](references/commands.md) when checking command details. Read [references/workflows.md](references/workflows.md) when reusing workflows or recovering from connection failures.

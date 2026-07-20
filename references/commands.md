@@ -4,13 +4,14 @@
 
 | Command | Purpose |
 |---|---|
-| `starcat pair --stdin` | Redeem a one-time invitation provided through stdin and wait for approval in Starcat |
+| `starcat pair "<starcat-pair://...>"` | Execute the complete single-use pairing command copied from Starcat and wait for in-app approval |
 | `starcat unpair` | Delete the current device profile and its operating-system credential |
-| `starcat doctor --json` | Check pairing, connectivity, protocol compatibility, available tools, and capabilities |
-| `starcat capabilities --json` | Read the current Starcat permission snapshot |
+| `starcat doctor` | Check pairing, connectivity, protocol compatibility, tools, and capabilities using terminal-friendly text |
+| `starcat doctor --json` | Print the same diagnostic result as machine-readable JSON |
+| `starcat capabilities` | Read the current Starcat permission snapshot as JSON |
 | `starcat mcp` | Bridge stdio JSON-RPC to Starcat MCP Streamable HTTP |
 
-Never place a `starcat-pair://...` URI in command arguments. Run `starcat pair --stdin` and provide the URI only through stdin.
+For pairing, instruct the user to copy the complete command from Starcat and execute it exactly as provided. Never request a standalone `starcat-pair://...` URI or Local API Key. Never print, persist, or reuse the pairing command.
 
 ## Read operations
 
