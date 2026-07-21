@@ -16,11 +16,24 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          # setup-python 默认只寻找 requirements.txt / pyproject.toml；本项目使用独立的开发依赖文件。
+          cache-dependency-path: requirements-dev.txt
       - name: Install validation dependencies
         run: python -m pip install -r requirements-dev.txt
-      - name: Install latest released Starcat CLI
+      - name: Checkout current Starcat CLI contract
+        uses: actions/checkout@v4
+        with:
+          repository: starcat-app/starcat-cli
+          path: .ci/starcat-cli
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: .ci/starcat-cli/go.mod
+          cache-dependency-path: .ci/starcat-cli/go.sum
+      - name: Build current Starcat CLI contract
+        # Skill main 与 CLI main 同步演进；正式版本兼容性由 CLI 发版流程验证，不能拿旧 release 校验新契约。
         run: |
-          curl -fsSL https://github.com/starcat-app/starcat-cli/releases/latest/download/install.sh -o "$RUNNER_TEMP/install-starcat.sh"
-          STARCAT_INSTALL_DIR="$RUNNER_TEMP/bin" sh "$RUNNER_TEMP/install-starcat.sh"
+          mkdir -p "$RUNNER_TEMP/bin"
+          go build -o "$RUNNER_TEMP/bin/starcat" ./cmd/starcat
+        working-directory: .ci/starcat-cli
       - name: Validate Skill and CLI contract
         run: python scripts/validate_contract.py --cli "$RUNNER_TEMP/bin/starcat"

@@ -108,5 +108,5 @@ If the CLI is not paired, open **Starcat → Settings → MCP Service**, copy th
 
 ```bash
 python3 -m pip install -r requirements-dev.txt
-python3 scripts/validate_contract.py
+python3 scripts/validate_contract.py --cli "$(command -v starcat)"
 ```

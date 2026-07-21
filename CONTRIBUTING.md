@@ -6,7 +6,7 @@
 
 ```bash
 python3 -m pip install -r requirements-dev.txt
-python3 scripts/validate_contract.py
+python3 scripts/validate_contract.py --cli "$(command -v starcat)"
 ```
 
 - `SKILL.md`、`references/` 和 `agents/openai.yaml` 必须与当前 Starcat CLI/MCP 契约一致。

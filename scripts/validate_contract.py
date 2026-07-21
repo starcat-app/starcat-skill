@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate starcat-skill structure and its contract with the released CLI."""
+"""Validate starcat-skill structure and its contract with the current CLI."""
 
 from __future__ import annotations
 
