@@ -11,8 +11,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -21,11 +21,11 @@ jobs:
       - name: Install validation dependencies
         run: python -m pip install -r requirements-dev.txt
       - name: Checkout current Starcat CLI contract
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: starcat-app/starcat-cli
           path: .ci/starcat-cli
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: .ci/starcat-cli/go.mod
           cache-dependency-path: .ci/starcat-cli/go.sum
