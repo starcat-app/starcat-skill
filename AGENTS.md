@@ -5,7 +5,7 @@
 ## 仓库边界
 
 - 本目录是 Starcat 官方 AI Agent Skill 的独立 Git 仓库，只通过跨平台
-  `starcat mcp` bridge 使用 Starcat 能力，不直接读取应用数据库、CloudKit 或凭据文件。
+  `starcat mcp` bridge 或结构化 CLI 使用 Starcat 能力，不直接读取应用数据库、CloudKit 或凭据文件。
 - 本仓库拥有独立分支、remote、提交和发布边界；不得把改动并入外层 Starcat 主仓库
   或顺带修改 `starcat-cli` 及相邻 `supports/*` 项目。
 - 开工前核对 `git status --short` 与当前分支，保留用户已有改动；未经明确要求不
@@ -25,20 +25,23 @@
 
 - `starcat` CLI 的当前 help、`starcat.get_capabilities` 返回值和正式 MCP tool schema
   是运行时契约来源；Skill 不得臆造命令、工具、字段、默认值或 capability。
-- 业务操作必须通过用户级 `starcat mcp` bridge；不得绕过 bridge 自行访问 SQLite、
+- 业务操作通过用户级 `starcat mcp` 或 `tools call` / 真实专用命令；不得绕过 CLI 自行访问 SQLite、
   Local API、HTTP/JSON-RPC、配对凭据或 Local API Key。
 - 每个工作流先调用 `starcat.get_capabilities`；README 等大内容只在任务需要时读取，
   不把用户私有笔记、标签、状态或检索结果写入日志和仓库。
 - CLI 与 Skill 同步演进时必须更新契约说明与校验预期；不能用未经确认的旧 release
   行为冒充当前 contract。
+- 新增或修改业务工作流时主动评估 CLI / MCP 双入口，读取 App 运行时目录，注明权限、
+  副作用、预览、长任务与回读。主仓规范为
+  `../../docs/5-规范/CLI与MCP能力暴露规范.md`；独立使用时以本仓运行时契约说明为准。
 
 ## 写操作授权
 
 - 所有写工具默认先以 `dry_run = true` 预览目标和变化；只有用户原始请求明确授权，
   且 dry-run 与请求完全一致时，才可用相同参数执行 `dry_run = false`。
-- 写后必须调用 `starcat.get_repo_context` 验证。`starcat.set_repo_tags` 会覆盖全部标签，
+- 写后必须通过对应读取入口验证；仓库类变更优先调用 `starcat.get_repo_context`。`starcat.set_repo_tags` 会覆盖全部标签，
   除非用户确认完整最终集合，否则使用增删工具。
-- 不得 Star/Unstar GitHub 仓库。摘要生成可能消耗用户 AI 配额，External Search 还会
+- Star/Unstar 仅在用户明确要求、App 已开放对应权限且预览目标一致时执行。摘要生成可能消耗用户 AI 配额，External Search 还会
   发送外部上下文，两者都必须由用户明确请求。
 
 ## 验证命令

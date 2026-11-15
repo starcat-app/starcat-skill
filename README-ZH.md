@@ -67,7 +67,7 @@ Starcat 官方 AI Agent Skill，通过跨平台 [Starcat CLI](https://github.com
 - 通过用户在 Starcat 中配置的 AI Provider 生成仓库摘要。
 - 在完成 dry-run 并获得用户明确授权后，新增或更新私人笔记、阅读状态和标签。
 
-本 Skill 不直接访问 Starcat 的 SQLite 数据库、CloudKit 数据、凭据文件或 Local API Key。所有业务操作都通过 `starcat mcp` bridge 与 Starcat capability 模型完成。
+本 Skill 不直接访问 Starcat 的 SQLite 数据库、CloudKit 数据、凭据文件或 Local API Key。业务操作通过 `starcat mcp` 或结构化 CLI，共用 App 的真实公共目录。
 
 ## 安装
 
@@ -91,12 +91,12 @@ starcat doctor
 
 ## Agent 工作流
 
-1. 在 Agent 的用户级 MCP 配置中，将 server command 指向 `starcat` 可执行文件的绝对路径，并只传入参数 `mcp`。
-2. 每个工作流开始前调用 `starcat.get_capabilities`。
-3. 搜索、统计、仓库上下文、README 与摘要使用只读工具。
-4. 写操作先以 `dry_run = true` 调用对应工具。
-5. 只有用户明确授权且预览结果完全匹配请求时，才以 `dry_run = false` 应用修改。
-6. 写入后再次读取仓库上下文，确认结果已经生效。
+1. 已配置 MCP 时以绝对路径启动 `starcat mcp`；仅执行 Shell 时使用 `starcat tools list --json`、`tools describe`、`tools call` 与 `resources`。
+2. 每个工作流先检查 `starcat.get_capabilities` 和运行时目录；已支持不代表当前权限或渠道可用。
+3. 健康度、Release、发现与限定知识库证据优先读缓存；私有笔记需 App 明确授权。
+4. 写入和任务启动先预览；MCP 传 `dry_run=true`，CLI 默认预览。
+5. 用户授权且预览匹配后，MCP 明确传 `dry_run=false`，CLI 加 `--apply`。生成可能消耗 AI 配额，建议与笔记草稿不会自动保存。
+6. 写后回读，按任务 ID 查询进度和结果，不重放超时启动。任务结果临时保留；导出文件属于运行 CLI 的设备。
 
 ## 仓库结构
 
@@ -114,3 +114,5 @@ starcat doctor
 python3 -m pip install -r requirements-dev.txt
 python3 scripts/validate_contract.py --cli "$(command -v starcat)"
 ```
+
+与 App 源码联合开发时，增加 `--app-root /path/to/Starcat`，检查文档引用的工具确已登记。

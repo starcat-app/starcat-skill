@@ -55,7 +55,7 @@ brew install --cask starcat
 - [starcat-discovery-api](https://github.com/starcat-app/starcat-discovery-api)
 <!-- starcat-promo:end -->
 
-Official AI agent skill for reading and organizing repository knowledge stored in [Starcat](https://starcat.ink) through the cross-platform [Starcat CLI](https://github.com/starcat-app/starcat-cli) MCP bridge.
+Official AI agent skill for reading and organizing repository knowledge stored in [Starcat](https://starcat.ink) through the cross-platform [Starcat CLI](https://github.com/starcat-app/starcat-cli), using MCP or structured commands.
 
 [简体中文](./README-ZH.md)
 
@@ -67,7 +67,7 @@ Official AI agent skill for reading and organizing repository knowledge stored i
 - Generate repository summaries through the user's configured Starcat AI provider.
 - Add or update private notes, reading status, and tags after an explicit dry run and user authorization.
 
-The skill does not access Starcat's SQLite database, CloudKit data, credential files, or Local API Keys directly. All business operations use the `starcat mcp` bridge and Starcat's capability model.
+The skill does not access Starcat's SQLite database, CloudKit data, credential files, or Local API Keys directly. Business operations use either the `starcat mcp` bridge or structured CLI commands backed by the same app registry.
 
 ## Install
 
@@ -91,12 +91,12 @@ If the CLI is not paired, open **Starcat → Settings → MCP Service**, copy th
 
 ## Agent Workflow
 
-1. Connect the agent's user-level MCP configuration to the absolute `starcat` executable with the single argument `mcp`.
-2. Call `starcat.get_capabilities` before each workflow.
-3. Use read-only tools for search, statistics, context, READMEs, and summaries.
-4. For a write, call the relevant tool with `dry_run = true` first.
-5. Apply the exact proposed change with `dry_run = false` only when the user has explicitly authorized it.
-6. Read the repository context again to verify the result.
+1. Start `starcat mcp` using its absolute executable path, or use `starcat tools list --json`, `tools describe`, `tools call`, and `resources` from a shell.
+2. Inspect `starcat.get_capabilities` and the runtime catalog before each workflow; supported tools may still be unavailable because of permissions or channel restrictions.
+3. Use cached reads for health, releases, discovery, and scoped knowledge evidence. Private notes require explicit app permission.
+4. Preview writes and task starts with `dry_run = true`; CLI preview is the default.
+5. After user authorization, apply the exact proposal using MCP `dry_run = false` or CLI `--apply`. Generation can incur AI usage; suggestions and note drafts are not saved automatically.
+6. Read back changes and follow returned task IDs. Do not replay a timed-out start. Task results are temporary; exported files belong to the device running the CLI.
 
 ## Repository Layout
 
@@ -114,3 +114,5 @@ If the CLI is not paired, open **Starcat → Settings → MCP Service**, copy th
 python3 -m pip install -r requirements-dev.txt
 python3 scripts/validate_contract.py --cli "$(command -v starcat)"
 ```
+
+When developing beside the app repository, add `--app-root /path/to/Starcat` to check referenced tools against app registration. Skill instructions and reference workflows are maintained in Chinese.

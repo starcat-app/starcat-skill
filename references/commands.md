@@ -1,69 +1,56 @@
-# Starcat MCP and CLI Contract
+# Starcat CLI 与 MCP 契约
 
-## Pairing and transport
+## 连接与动态入口
 
-| Command | Purpose |
-|---|---|
-| `starcat pair "<starcat-pair://...>"` | Execute the complete single-use pairing command copied from Starcat and wait for in-app approval |
-| `starcat unpair` | Delete the current device profile and its operating-system credential |
-| `starcat doctor` | Check pairing, connectivity, protocol compatibility, tools, and capabilities using terminal-friendly text |
-| `starcat mcp` | Bridge stdio JSON-RPC to Starcat MCP Streamable HTTP |
+| 命令 | 用途 |
+| --- | --- |
+| `starcat pair "<starcat-pair://...>"` | 执行用户从 App 复制的完整单次命令 |
+| `starcat unpair` | 删除当前 CLI profile 和系统凭据 |
+| `starcat doctor` | 检查连接、配对、协议、工具和权限 |
+| `starcat mcp` | stdio JSON-RPC 经 CLI 连接层转发给 App |
+| `starcat tools list --json` | 读取实际工具 Schema |
+| `starcat tools describe starcat.get_repo_context --json` | 查看单个工具 |
+| `starcat tools call starcat.get_overview_statistics` | 通用 JSON 调用 |
+| `starcat tools call starcat.knowledge_search --input query.json` | 读取 CLI 本机文件；`--input -` 使用 stdin |
+| `starcat resources list --json` | 动态列出资源 |
+| `starcat resources read starcat://capabilities` | 读取目录与业务契约 |
 
-For pairing, instruct the user to copy the complete command from Starcat and execute it exactly as provided. Never request a standalone `starcat-pair://...` URI or Local API Key. Never print, persist, or reuse the pairing command.
+输入必须是单个 JSON 对象，最大 8 MiB；结果为 JSON，诊断在 stderr。
+CLI 与 MCP 共用业务执行器，App 是账号、Pro、隐私和写入权限的最终边界。
 
-The agent must use `starcat mcp` for business operations. Ordinary CLI business commands are human-facing shortcuts and are not the Skill's data transport.
+## 便利命令
 
-## Statistics tools
+| 工具 | 普通 CLI 路径 |
+| --- | --- |
+| `starcat.get_capabilities` | `starcat capabilities` |
+| `starcat.get_overview_statistics` | `starcat stats --json` |
+| `starcat.get_ai_usage_statistics` | `starcat stats ai --range 30d --json` |
+| `starcat.get_knowledge_base_statistics` | `starcat stats knowledge --json` |
+| `starcat.get_repo` | `starcat repo get owner/name` |
+| `starcat.get_repo_note` | `starcat repo note get owner/name` |
+| `starcat.list_repos_by_tag` | `starcat repo by-tag TAG --limit 20` |
+| `starcat.star_repo` / `starcat.unstar_repo` | `starcat repo star owner/name` / `starcat repo unstar owner/name`，执行须 `--apply` |
+| 其它工具，包括 `starcat.batch_organize_repos` | `starcat tools call NAME --input FILE`，执行须 `--apply` |
 
-| MCP tool | Purpose |
-|---|---|
-| `starcat.get_overview_statistics` | Read starred repository count, knowledge-base project count, all-time AI usage, and RAG index health |
-| `starcat.get_ai_usage_statistics` | Read token/call statistics filtered by time range, feature, provider, or model |
-| `starcat.get_knowledge_base_statistics` | Read knowledge-base organization, source coverage, exclusions, and chunk/index health |
+读取 `starcat help repo`、`starcat help stats`、`starcat help tools`、`starcat help resources`。
+专用子命令是便利入口，通用调用也是正式入口。
 
-`starcat.get_ai_usage_statistics` accepts:
+## 新能力与版本
 
-- `time_range`: `today`, `seven_days`, `thirty_days`, or `all`; default `all`.
-- `feature`: optional Starcat feature raw value.
-- `provider_id`: optional provider profile identifier.
-- `model`: optional model name.
+`starcat.get_capability_catalog` 返回 `contract_version`、`server_version`、`write_default`、
+`availability`、任务保留策略和工具。登记了工具不代表当前权限开启。
+缓存健康 / 安全 / 洞察、Release / 通知、Trending / Weekly / Awesome / 每日热点、
+知识库、Skill 证据、模型、任务和导出均通过实际目录发现，不在 Skill 复制固定完整名单。
 
-Statistics are local, read-only aggregates. They never include prompts, responses, API keys, chunk bodies, or raw error text. Private-note counts are omitted unless `private_notes_read` is enabled.
+读取来源、缓存和分页标记；`cache_hit=false` 不代表来源永久为空。
+按 `has_more` / `next_offset` 或 `next_cursor` 分页，页长不是全量总数。
+知识库证据限定范围，私有笔记须明确授权。
 
-## Repository read tools
+server `0.6.0` 的业务契约 v2 默认预览；旧 server 可能默认写入，
+MCP 始终明确传 `dry_run=true`，执行传 `false`。
+CLI 主动填 `dry_run=!apply`，旧 App 也不能由输入绕过 `--apply`。
+无预览的副作用工具同样须 `--apply`；未知工具不静默替换动作。
 
-| MCP tool | Purpose |
-|---|---|
-| `starcat.get_capabilities` | Read the current privacy, statistics, generation, and write permissions |
-| `starcat.search_repos` | Run local keyword search with `scope` and `limit` |
-| `starcat.semantic_search` | Run semantic repository search |
-| `starcat.get_repo_context` | Retrieve repository data, tags, optional private note, and cached summary together |
-| `starcat.get_readme` | Read the cached README |
-| `starcat.get_repo_summary` | Read the cached summary |
-| `starcat.list_tags` | List all tags |
-
-## Generation and write tools
-
-| MCP tool | Purpose and constraints |
-|---|---|
-| `starcat.generate_repo_summary` | Generate a summary with the user's Starcat AI provider; this may consume quota |
-| `starcat.upsert_repo_note` | Set or clear a Markdown private note |
-| `starcat.set_repo_status` | Set `status` to `unread`, `read`, or `using` |
-| `starcat.add_repo_tags` | Add tags incrementally and create missing tags when permitted |
-| `starcat.remove_repo_tags` | Remove tags incrementally |
-| `starcat.set_repo_tags` | Replace all tags; require destructive-write permission |
-| `starcat.create_tag` | Create a tag with optional color and icon values |
-
-Every write tool must first be called with `dry_run = true`. After an authorized write with `dry_run = false`, retrieve the repository context again to verify the stored result.
-
-## Human-facing statistics commands
-
-These commands call the same MCP tools but render terminal-friendly text:
-
-```bash
-starcat stats
-starcat stats ai --range 30d
-starcat stats knowledge
-```
-
-Agents use the structured MCP tools instead of parsing terminal output.
+业务错误退出非零，通用入口 stderr 带 `STARCAT_ERROR CODE: message`，stdout 不混入诊断。
+既有 `starcat search` 保持 global-search schema v1。
+任务由 App 持有，断开不取消，状态与结果分别查询；不伪造取消、恢复或百分比。

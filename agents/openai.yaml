@@ -1,4 +1,4 @@
 interface:
   display_name: "Starcat"
-  short_description: "Query and organize Starcat knowledge through MCP"
-  default_prompt: "Use $starcat-skill and the starcat mcp bridge to query statistics or inspect and organize repositories in Starcat."
+  short_description: "通过 CLI 或 MCP 查询和整理 Starcat 知识"
+  default_prompt: "使用 $starcat-skill，通过 Starcat CLI 或 MCP 发现实际能力、查询知识；获授权后预览并执行写入，回读验证结果。"
