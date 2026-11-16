@@ -40,8 +40,9 @@ Codex 使用 `$HOME/.codex/skills/starcat-skill`，Claude Code 使用 `$HOME/.cl
 4. 缺少工具时报告版本或模块不支持；权限关闭时引导设置，不绕过门禁。
 5. 以后新增公共工具可直接通用调用，不必等待 Skill 增加专用命令。
 
-App 公共契约 v2 从 server `0.6.0` 起，含 `dry_run` 的操作省略时默认预览。
-旧 App 可能省略即执行，因此调用方始终显式预览；MCP 协议版本不能代替业务版本。
+App 公共契约 v3 从 server `0.7.0` 起，权限仅有 `read` / `write`。
+读默认开放，包括笔记；写默认关闭，在 App 设置 → 扩展与连接 → MCP 服务开启“允许写入”。
+刷新、生成、删除、批量、安装和远端提交共用此开关。MCP 协议版本不能代替业务版本。
 
 ## 读取与查询
 
@@ -49,7 +50,7 @@ App 公共契约 v2 从 server `0.6.0` 起，含 `dry_run` 的操作省略时默
 - 已知 `owner/name` 时优先 `starcat.get_repo_context`；需要大正文才读取 `starcat.get_readme`。
 - `starcat.knowledge_search` 必须限定 `repo_ids`，返回证据与引用，不代表完成答案生成。
 - 健康、安全、洞察、推荐、Release、通知、每日热点和 Skill 证据按目录的缓存语义读取，缺失不是零，不自动刷新或生成。
-- 私有笔记须有 App 授权并按 Schema 显式请求；结果和内容不写入日志或仓库。
+- 笔记属于默认读权限；`include_private_notes` 是内容筛选参数。结果和内容不写入日志或仓库。
 
 用户收藏数与仓库公众 Star 数不同；Provider 未报告 token 不代表消耗为零。
 每日热点按 `catalog_revision` 分页，详情固定语言和 `revision`，不能用新版正文解释旧引用。
@@ -63,13 +64,13 @@ starcat tools call starcat.set_repo_status --input status.json
 starcat tools call starcat.set_repo_status --input status.json --apply
 ```
 
-CLI 用 `--apply` 决定 `dry_run`，输入 JSON 的 `false` 不能绕过预览。
-无预览的副作用工具同样须显式执行，不能伪造预览。
-MCP 对含该参数的工具先传 `dry_run=true`，执行时传 `false`。
+通用 CLI 保留 JSON 中的 `dry_run`；省略时遵循 App 默认预览。
+`--apply` 只是 `dry_run=false` 的便利写法，不能与明确的 `true` 同用。
+无预览工具遵循 App 的显式调用语义。MCP 与 CLI 传相同参数时行为相同。
 写后按对应读取入口核验，批量逐项检查，不假定跨 GitHub 和本地事务原子回滚。
 
-- 标签优先增删；`starcat.set_repo_tags` 会替换完整集合，需要完整目标和破坏性写入权限。
-- GitHub Star / Unstar 仅在用户明确要求且 `github_star_writes` 开启时执行。
+- 标签优先增删；`starcat.set_repo_tags` 会替换完整集合，需要核对目标并使用写权限。
+- GitHub Star / Unstar 在用户明确要求且 `write` 开启时执行，不另设 Star 权限。
 - 摘要、标签建议、翻译和问答可能消耗配额，仅在用户要求时发起，建议不自动应用。
 - External Search 须明确许可。外部 Agent 的文章不能冒称原生摘要，可按授权存入注明来源的笔记。
 
